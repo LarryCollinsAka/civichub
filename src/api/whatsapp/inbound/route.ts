@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { sendWhatsApp } from "@/lib/whatsapp";
 import { supabase } from "@/lib/supabase";
+import { classifyIncident } from "@/lib/ai";
+import { dispatchIncident } from "@/lib/dispatch";
 
 export async function POST(req: Request) {
   try {
@@ -9,24 +11,30 @@ export async function POST(req: Request) {
     const body = formData.get("Body")?.toString() || "";
     const from = formData.get("From")?.toString() || "";
 
-    console.log("Incoming WhatsApp:", { from, body });
+    const ai = await classifyIncident(body);
 
-    // Save to database
     await supabase.from("incidents").insert([
       {
-        type: "Unknown",
-        description: body,
+        type: ai.type,
+        description: ai.summary,
         source: "whatsapp",
-        priority: "Pending",
-        department: "Pending",
+        priority: ai.priority,
+        department: ai.department,
         reporter: from.replace("whatsapp:", ""),
       },
     ]);
 
-    // Auto reply
+    await dispatchIncident(ai);
+
     await sendWhatsApp(
       from.replace("whatsapp:", ""),
-      `✅ Civihub received your report:\n"${body}"\n\nResponders will review shortly.`
+      `✅ Civihub received your report.
+
+Type: ${ai.type}
+Priority: ${ai.priority}
+Assigned: ${ai.department}
+
+Response team notified.`,
     );
 
     return new NextResponse("OK", {
