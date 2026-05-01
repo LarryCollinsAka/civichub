@@ -1,184 +1,88 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
 export default function MapPage() {
-  const mapContainerRef = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<mapboxgl.Map | null>(null);
-
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const mapContainer = useRef<HTMLDivElement | null>(null);
+  const [status, setStatus] = useState("Loading map...");
 
   useEffect(() => {
-    if (!mapContainerRef.current || mapRef.current) return;
+    let map: any;
 
-    const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+    async function init() {
+      try {
+        const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
-    if (!token) {
-      setError("Missing NEXT_PUBLIC_MAPBOX_TOKEN");
-      setLoading(false);
-      return;
-    }
+        if (!token) {
+          setStatus("Missing NEXT_PUBLIC_MAPBOX_TOKEN");
+          return;
+        }
 
-    mapboxgl.accessToken = token.trim();
+        const mapboxgl = (await import("mapbox-gl")).default;
 
-    try {
-      const map = new mapboxgl.Map({
-        container: mapContainerRef.current,
-        style: "mapbox://styles/mapbox/streets-v12",
-        center: [11.5021, 3.848], // Yaoundé
-        zoom: 12,
-        attributionControl: false,
-      });
+        mapboxgl.accessToken = token.trim();
 
-      mapRef.current = map;
+        map = new mapboxgl.Map({
+          container: mapContainer.current!,
+          style: "mapbox://styles/mapbox/streets-v12",
+          center: [11.5021, 3.848],
+          zoom: 12,
+        });
 
-      map.addControl(
-        new mapboxgl.NavigationControl(),
-        "top-right"
-      );
+        map.addControl(new mapboxgl.NavigationControl(), "top-right");
 
-      map.on("load", () => {
-        setLoading(false);
-        map.resize();
+        map.on("load", () => {
+          setStatus("Map loaded");
+          map.resize();
 
-        const incidents = [
-          {
-            lng: 11.502,
-            lat: 3.848,
-            title: "Road Accident",
-          },
-          {
-            lng: 11.517,
-            lat: 3.872,
-            title: "Robbery Alert",
-          },
-          {
-            lng: 11.49,
-            lat: 3.861,
-            title: "Flood Warning",
-          },
-        ];
-
-        incidents.forEach((item) => {
-          const el = document.createElement("div");
-          el.innerHTML = "🚨";
-          el.style.fontSize = "28px";
-          el.style.cursor = "pointer";
-
-          new mapboxgl.Marker(el)
-            .setLngLat([item.lng, item.lat])
-            .setPopup(
-              new mapboxgl.Popup({
-                offset: 25,
-              }).setHTML(
-                `<div style="font-weight:700;">${item.title}</div>`
-              )
-            )
+          new mapboxgl.Marker()
+            .setLngLat([11.5021, 3.848])
             .addTo(map);
         });
-      });
 
-      map.on("error", () => {
-        setError("Failed to load Mapbox map.");
-        setLoading(false);
-      });
-    } catch (err) {
-      console.error(err);
-      setError("Map initialization failed.");
-      setLoading(false);
+        map.on("error", (e: any) => {
+          console.error(e);
+          setStatus("Mapbox error");
+        });
+      } catch (err) {
+        console.error(err);
+        setStatus("Initialization failed");
+      }
     }
 
+    init();
+
     return () => {
-      mapRef.current?.remove();
-      mapRef.current = null;
+      if (map) map.remove();
     };
   }, []);
 
   return (
-    <main className="relative h-screen w-full overflow-hidden bg-slate-100">
-      {/* MAP */}
+    <main className="relative h-screen w-screen overflow-hidden">
+      {/* Force exact size */}
       <div
-        ref={mapContainerRef}
-        className="absolute inset-0"
+        ref={mapContainer}
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+        }}
       />
 
-      {/* Loading */}
-      {loading && !error && (
-        <div className="absolute inset-0 z-40 flex items-center justify-center bg-white/70 backdrop-blur-sm">
-          <div className="rounded-2xl bg-white px-6 py-4 shadow-xl font-semibold">
-            Loading map...
-          </div>
-        </div>
-      )}
-
-      {/* Error */}
-      {error && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center px-6">
-          <div className="max-w-md rounded-3xl bg-white p-8 shadow-2xl text-center">
-            <p className="text-red-500 text-lg font-bold">
-              Map Error
-            </p>
-
-            <p className="mt-3 text-slate-600">
-              {error}
-            </p>
-
-            <p className="mt-4 text-sm text-slate-400">
-              Check your Mapbox token in Vercel or
-              .env.local
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Top Card */}
-      <div className="absolute z-20 top-4 left-4 right-4 md:right-auto md:w-96 rounded-3xl bg-white/95 backdrop-blur shadow-xl p-5">
-        <p className="text-sm text-slate-500">
-          Live Monitoring
-        </p>
-
-        <h1 className="text-2xl font-bold mt-1">
-          Yaoundé Incident Map
-        </h1>
-
-        <div className="grid grid-cols-3 gap-3 mt-4 text-center">
-          <div className="rounded-2xl bg-slate-100 p-3">
-            <p className="text-xl font-bold">12</p>
-            <p className="text-xs text-slate-500">
-              Reports
-            </p>
-          </div>
-
-          <div className="rounded-2xl bg-red-50 p-3">
-            <p className="text-xl font-bold text-red-600">
-              4
-            </p>
-            <p className="text-xs text-red-500">
-              Urgent
-            </p>
-          </div>
-
-          <div className="rounded-2xl bg-blue-50 p-3">
-            <p className="text-xl font-bold text-blue-600">
-              3
-            </p>
-            <p className="text-xs text-blue-500">
-              Nearby
-            </p>
-          </div>
-        </div>
+      {/* Debug status */}
+      <div className="absolute z-50 top-4 left-4 rounded-xl bg-white px-4 py-2 shadow">
+        {status}
       </div>
 
-      {/* Bottom Actions */}
-      <div className="absolute z-20 bottom-6 left-4 right-4 md:left-auto md:w-80 rounded-3xl bg-white p-4 shadow-2xl">
-        <button className="w-full rounded-2xl bg-green-500 py-4 text-white font-bold hover:bg-green-600 transition">
+      {/* Bottom buttons */}
+      <div className="absolute z-50 bottom-6 right-6 w-72 rounded-3xl bg-white p-4 shadow-2xl">
+        <button className="w-full rounded-2xl bg-green-500 py-4 text-white font-bold">
           Share My Location
         </button>
 
-        <button className="w-full mt-3 rounded-2xl bg-red-500 py-4 text-white font-bold hover:bg-red-600 transition">
+        <button className="mt-3 w-full rounded-2xl bg-red-500 py-4 text-white font-bold">
           🚨 Emergency SOS
         </button>
       </div>
