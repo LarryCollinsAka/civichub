@@ -20,6 +20,7 @@ export default function MapPage() {
         }
 
         const mapboxgl = (await import("mapbox-gl")).default;
+
         mapboxgl.accessToken = token.trim();
 
         map = new mapboxgl.Map({
@@ -29,49 +30,27 @@ export default function MapPage() {
           zoom: 14,
           pitch: 65,
           bearing: -20,
-          antialias: true,
+          antialias: true
         });
 
-        map.addControl(new mapboxgl.NavigationControl(), "top-right");
+        map.addControl(
+          new mapboxgl.NavigationControl(),
+          "top-right"
+        );
 
         map.on("load", () => {
           setStatus("Map loaded");
 
-          // SIMPLE MARKER FIRST
           new mapboxgl.Marker({ color: "#ef4444" })
             .setLngLat([11.5021, 3.848])
             .addTo(map);
 
-          // SAFE 3D BUILDINGS
-          try {
-            map.addLayer({
-              id: "buildings-3d",
-              source: "composite",
-              "source-layer": "building",
-              filter: ["==", "extrude", "true"],
-              type: "fill-extrusion",
-              minzoom: 12,
-              paint: {
-                "fill-extrusion-color": "#cbd5e1",
-                "fill-extrusion-height": ["get", "height"],
-                "fill-extrusion-base": ["get", "min_height"],
-                "fill-extrusion-opacity": 0.8
-              }
-            });
-          } catch (e) {
-            console.log("3D skipped");
-          }
-
           map.resize();
         });
 
-        map.on("error", () => {
-          setStatus("Map error");
-        });
-
-      } catch (err) {
-        console.error(err);
-        setStatus("Init failed");
+      } catch (error) {
+        console.error(error);
+        setStatus("Failed");
       }
     }
 
@@ -83,19 +62,80 @@ export default function MapPage() {
   }, []);
 
   return (
-    <main className="relative h-screen w-screen overflow-hidden">
-      <div ref={mapContainer} className="absolute inset-0" />
+    <main
+      style={{
+        position: "relative",
+        width: "100vw",
+        height: "100vh",
+        overflow: "hidden"
+      }}
+    >
+      {/* IMPORTANT HARD SIZE */}
+      <div
+        ref={mapContainer}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%"
+        }}
+      />
 
-      <div className="absolute z-50 top-4 left-4 rounded-xl bg-white px-4 py-2 shadow">
+      <div
+        style={{
+          position: "absolute",
+          top: 16,
+          left: 16,
+          zIndex: 50,
+          background: "white",
+          padding: "10px 14px",
+          borderRadius: "14px",
+          boxShadow: "0 8px 20px rgba(0,0,0,.08)"
+        }}
+      >
         {status}
       </div>
 
-      <div className="absolute z-40 bottom-6 right-6 w-80 rounded-3xl bg-white p-4 shadow-2xl">
-        <button className="w-full rounded-2xl bg-green-500 py-4 text-white font-bold">
+      <div
+        style={{
+          position: "absolute",
+          right: 24,
+          bottom: 24,
+          zIndex: 50,
+          width: 320,
+          background: "white",
+          padding: 16,
+          borderRadius: 24,
+          boxShadow: "0 20px 40px rgba(0,0,0,.12)"
+        }}
+      >
+        <button
+          style={{
+            width: "100%",
+            padding: "16px",
+            borderRadius: "18px",
+            border: "none",
+            background: "#22c55e",
+            color: "white",
+            fontWeight: 700
+          }}
+        >
           Share My Location
         </button>
 
-        <button className="mt-3 w-full rounded-2xl bg-red-500 py-4 text-white font-bold">
+        <button
+          style={{
+            width: "100%",
+            padding: "16px",
+            borderRadius: "18px",
+            border: "none",
+            background: "#ef4444",
+            color: "white",
+            fontWeight: 700,
+            marginTop: 12
+          }}
+        >
           🚨 Emergency SOS
         </button>
       </div>
