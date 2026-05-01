@@ -5,7 +5,10 @@ import "mapbox-gl/dist/mapbox-gl.css";
 
 export default function MapPage() {
   const mapContainer = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<any>(null);
+
   const [status, setStatus] = useState("Loading map...");
+  const [satellite, setSatellite] = useState(false);
 
   useEffect(() => {
     let map: any;
@@ -30,8 +33,10 @@ export default function MapPage() {
           zoom: 14,
           pitch: 65,
           bearing: -20,
-          antialias: true
+          antialias: true,
         });
+
+        mapRef.current = map;
 
         map.addControl(
           new mapboxgl.NavigationControl(),
@@ -39,15 +44,24 @@ export default function MapPage() {
         );
 
         map.on("load", () => {
-          setStatus("Map loaded");
+          setStatus("Live");
 
-          new mapboxgl.Marker({ color: "#ef4444" })
-            .setLngLat([11.5021, 3.848])
-            .addTo(map);
+          const incidents = [
+            [11.5021, 3.848],
+            [11.508, 3.852],
+            [11.495, 3.842],
+          ];
+
+          incidents.forEach((coords, i) => {
+            new mapboxgl.Marker({
+              color: i === 0 ? "#ef4444" : "#f59e0b",
+            })
+              .setLngLat(coords as [number, number])
+              .addTo(map);
+          });
 
           map.resize();
         });
-
       } catch (error) {
         console.error(error);
         setStatus("Failed");
@@ -61,64 +75,173 @@ export default function MapPage() {
     };
   }, []);
 
+  function toggleStyle() {
+    if (!mapRef.current) return;
+
+    const next = !satellite;
+    setSatellite(next);
+
+    mapRef.current.setStyle(
+      next
+        ? "mapbox://styles/mapbox/satellite-streets-v12"
+        : "mapbox://styles/mapbox/streets-v12"
+    );
+  }
+
   return (
     <main
       style={{
         position: "relative",
         width: "100vw",
         height: "100vh",
-        overflow: "hidden"
+        overflow: "hidden",
       }}
     >
-      {/* IMPORTANT HARD SIZE */}
+      {/* HARD SIZE MAP CONTAINER */}
       <div
         ref={mapContainer}
         style={{
           position: "absolute",
-          top: 0,
-          left: 0,
+          inset: 0,
           width: "100%",
-          height: "100%"
+          height: "100%",
         }}
       />
 
+      {/* Top Left Status */}
       <div
         style={{
           position: "absolute",
-          top: 16,
-          left: 16,
-          zIndex: 50,
-          background: "white",
-          padding: "10px 14px",
-          borderRadius: "14px",
-          boxShadow: "0 8px 20px rgba(0,0,0,.08)"
+          top: 18,
+          left: 18,
+          zIndex: 60,
+          padding: "12px 16px",
+          borderRadius: 18,
+          background: "rgba(255,255,255,.82)",
+          backdropFilter: "blur(12px)",
+          boxShadow: "0 10px 30px rgba(0,0,0,.08)",
+          minWidth: 250,
         }}
       >
-        {status}
+        <div
+          style={{
+            fontSize: 13,
+            color: "#64748b",
+            marginBottom: 4,
+          }}
+        >
+          CIVIHUB COMMAND CENTER
+        </div>
+
+        <div
+          style={{
+            fontSize: 28,
+            fontWeight: 800,
+            color: "#0f172a",
+          }}
+        >
+          Yaoundé Live Map
+        </div>
+
+        <div
+          style={{
+            marginTop: 10,
+            display: "flex",
+            gap: 8,
+          }}
+        >
+          <span
+            style={{
+              background: "#dcfce7",
+              color: "#166534",
+              padding: "6px 10px",
+              borderRadius: 999,
+              fontSize: 12,
+              fontWeight: 700,
+            }}
+          >
+            {status}
+          </span>
+
+          <span
+            style={{
+              background: "#fee2e2",
+              color: "#991b1b",
+              padding: "6px 10px",
+              borderRadius: 999,
+              fontSize: 12,
+              fontWeight: 700,
+            }}
+          >
+            4 Urgent
+          </span>
+        </div>
       </div>
 
+      {/* Top Right Controls */}
+      <div
+        style={{
+          position: "absolute",
+          top: 18,
+          right: 18,
+          zIndex: 60,
+          display: "flex",
+          gap: 10,
+        }}
+      >
+        <button
+          onClick={toggleStyle}
+          style={{
+            border: "none",
+            borderRadius: 16,
+            padding: "12px 16px",
+            background: "rgba(255,255,255,.88)",
+            backdropFilter: "blur(10px)",
+            fontWeight: 700,
+            cursor: "pointer",
+          }}
+        >
+          {satellite ? "Street View" : "Satellite"}
+        </button>
+      </div>
+
+      {/* Bottom Right Command Card */}
       <div
         style={{
           position: "absolute",
           right: 24,
           bottom: 24,
-          zIndex: 50,
-          width: 320,
-          background: "white",
-          padding: 16,
-          borderRadius: 24,
-          boxShadow: "0 20px 40px rgba(0,0,0,.12)"
+          zIndex: 60,
+          width: 340,
+          background: "rgba(255,255,255,.92)",
+          backdropFilter: "blur(14px)",
+          padding: 18,
+          borderRadius: 28,
+          boxShadow: "0 24px 60px rgba(0,0,0,.14)",
         }}
       >
+        <div
+          style={{
+            fontWeight: 800,
+            fontSize: 20,
+            marginBottom: 14,
+            color: "#0f172a",
+          }}
+        >
+          Emergency Actions
+        </div>
+
         <button
           style={{
             width: "100%",
             padding: "16px",
-            borderRadius: "18px",
+            borderRadius: 18,
             border: "none",
             background: "#22c55e",
             color: "white",
-            fontWeight: 700
+            fontWeight: 800,
+            fontSize: 16,
+            cursor: "pointer",
           }}
         >
           Share My Location
@@ -128,16 +251,60 @@ export default function MapPage() {
           style={{
             width: "100%",
             padding: "16px",
-            borderRadius: "18px",
+            borderRadius: 18,
             border: "none",
             background: "#ef4444",
             color: "white",
-            fontWeight: 700,
-            marginTop: 12
+            fontWeight: 800,
+            fontSize: 16,
+            marginTop: 12,
+            cursor: "pointer",
           }}
         >
           🚨 Emergency SOS
         </button>
+
+        <div
+          style={{
+            marginTop: 14,
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr 1fr",
+            gap: 8,
+          }}
+        >
+          {[
+            ["12", "Reports"],
+            ["3", "Nearby"],
+            ["92%", "AI Score"],
+          ].map(([n, t]) => (
+            <div
+              key={t}
+              style={{
+                background: "#f8fafc",
+                padding: "12px",
+                borderRadius: 18,
+                textAlign: "center",
+              }}
+            >
+              <div
+                style={{
+                  fontWeight: 800,
+                  fontSize: 18,
+                }}
+              >
+                {n}
+              </div>
+              <div
+                style={{
+                  fontSize: 12,
+                  color: "#64748b",
+                }}
+              >
+                {t}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </main>
   );
