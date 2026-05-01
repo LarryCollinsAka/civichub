@@ -1,154 +1,152 @@
-export default function DashboardPage() {
-  const incidents = [
-    {
-      id: "#CH-104",
-      type: "Road Accident",
-      area: "Melen",
-      status: "Urgent",
-      time: "2 min ago",
-    },
-    {
-      id: "#CH-105",
-      type: "Flood Alert",
-      area: "Mvog-Ada",
-      status: "Active",
-      time: "8 min ago",
-    },
-    {
-      id: "#CH-106",
-      type: "Suspicious Activity",
-      area: "Bastos",
-      status: "Review",
-      time: "14 min ago",
-    },
-    {
-      id: "#CH-107",
-      type: "Fire Incident",
-      area: "Essos",
-      status: "Urgent",
-      time: "21 min ago",
-    },
-  ];
+import { redirect } from "next/navigation";
+import { getSession } from "@/lib/auth";
 
-  const priorities = [
-    "Cluster of robbery reports near Central Market",
-    "Flood risk increasing in lowland zones",
-    "Repeat false alerts detected in Bastos",
-    "Accident hotspot forming around Melen Junction",
-  ];
+export default async function DashboardPage() {
+  const session = await getSession();
+
+  if (!session) {
+    redirect("/login");
+  }
 
   return (
-    <main className="min-h-screen bg-slate-100 p-5 md:p-8">
-      {/* Header */}
-      <section className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <p className="text-sm text-slate-500">Admin Console</p>
-          <h1 className="text-3xl font-bold">Civihub Dashboard</h1>
-        </div>
-
-        <button className="rounded-2xl bg-green-500 px-6 py-3 text-white font-semibold hover:bg-green-600 transition">
-          Export Reports
-        </button>
-      </section>
-
-      {/* Stats */}
-      <section className="mt-8 grid gap-4 md:grid-cols-4">
-        {[
-          ["124", "Total Reports"],
-          ["18", "Urgent Cases"],
-          ["42", "Resolved Today"],
-          ["93%", "Response Rate"],
-        ].map(([value, label]) => (
+    <main
+      style={{
+        minHeight: "100vh",
+        background: "#f8fafc",
+        padding: 24,
+      }}
+    >
+      <div
+        style={{
+          maxWidth: 1200,
+          margin: "0 auto",
+        }}
+      >
+        <div
+          style={{
+            background: "white",
+            borderRadius: 28,
+            padding: 24,
+            boxShadow:
+              "0 20px 50px rgba(0,0,0,.06)",
+          }}
+        >
           <div
-            key={label}
-            className="rounded-3xl bg-white p-5 shadow-sm"
+            style={{
+              fontSize: 13,
+              color: "#64748b",
+              fontWeight: 700,
+            }}
           >
-            <p className="text-3xl font-bold">{value}</p>
-            <p className="mt-2 text-sm text-slate-500">{label}</p>
-          </div>
-        ))}
-      </section>
-
-      {/* Main Grid */}
-      <section className="mt-8 grid gap-6 lg:grid-cols-3">
-        {/* Table */}
-        <div className="lg:col-span-2 rounded-3xl bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold">Recent Incidents</h2>
-            <button className="text-sm text-green-600 font-medium">
-              View all
-            </button>
+            CIVIHUB CONTROL CENTER
           </div>
 
-          <div className="mt-5 overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="text-sm text-slate-500 border-b">
-                  <th className="pb-3">ID</th>
-                  <th className="pb-3">Type</th>
-                  <th className="pb-3">Area</th>
-                  <th className="pb-3">Status</th>
-                  <th className="pb-3">Time</th>
-                </tr>
-              </thead>
+          <h1
+            style={{
+              fontSize: 38,
+              fontWeight: 800,
+              color: "#0f172a",
+              marginTop: 8,
+            }}
+          >
+            Welcome {session.user}
+          </h1>
 
-              <tbody>
-                {incidents.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="border-b last:border-0"
-                  >
-                    <td className="py-4 font-medium">{item.id}</td>
-                    <td className="py-4">{item.type}</td>
-                    <td className="py-4">{item.area}</td>
-                    <td className="py-4">
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                          item.status === "Urgent"
-                            ? "bg-red-100 text-red-600"
-                            : item.status === "Active"
-                            ? "bg-green-100 text-green-600"
-                            : "bg-yellow-100 text-yellow-700"
-                        }`}
-                      >
-                        {item.status}
-                      </span>
-                    </td>
-                    <td className="py-4 text-sm text-slate-500">
-                      {item.time}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <p
+            style={{
+              color: "#64748b",
+              marginTop: 8,
+            }}
+          >
+            Role: {session.role}
+          </p>
         </div>
 
-        {/* AI Panel */}
-        <div className="rounded-3xl bg-slate-900 text-white p-5 shadow-sm">
-          <p className="text-sm text-green-400">
-            NVIDIA NIM Intelligence
-          </p>
-          <h2 className="text-2xl font-bold mt-2">
-            AI Priority Queue
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns:
+              "repeat(auto-fit,minmax(220px,1fr))",
+            gap: 16,
+            marginTop: 20,
+          }}
+        >
+          {[
+            ["14", "New Reports"],
+            ["4", "Critical"],
+            ["8", "Assigned"],
+            ["91%", "AI Accuracy"],
+          ].map(([n, t]) => (
+            <div
+              key={t}
+              style={{
+                background: "white",
+                padding: 24,
+                borderRadius: 24,
+                boxShadow:
+                  "0 20px 50px rgba(0,0,0,.05)",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 32,
+                  fontWeight: 800,
+                }}
+              >
+                {n}
+              </div>
+
+              <div
+                style={{
+                  color: "#64748b",
+                  marginTop: 8,
+                }}
+              >
+                {t}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div
+          style={{
+            marginTop: 20,
+            background: "white",
+            padding: 24,
+            borderRadius: 28,
+            boxShadow:
+              "0 20px 50px rgba(0,0,0,.05)",
+          }}
+        >
+          <h2
+            style={{
+              fontSize: 24,
+              fontWeight: 800,
+            }}
+          >
+            Incoming Incidents
           </h2>
 
-          <div className="mt-5 space-y-3">
-            {priorities.map((item, i) => (
-              <div
-                key={i}
-                className="rounded-2xl bg-white/10 p-4 text-sm"
-              >
-                {item}
-              </div>
-            ))}
-          </div>
-
-          <button className="mt-5 w-full rounded-2xl bg-green-500 py-3 font-semibold hover:bg-green-600 transition">
-            Run Analysis
-          </button>
+          {[
+            "Robbery near Melen Junction",
+            "Accident at Ngoa Ekelle",
+            "Flood alert at Mokolo",
+          ].map((item) => (
+            <div
+              key={item}
+              style={{
+                padding: 16,
+                marginTop: 12,
+                borderRadius: 18,
+                background: "#f8fafc",
+                fontWeight: 600,
+              }}
+            >
+              {item}
+            </div>
+          ))}
         </div>
-      </section>
+      </div>
     </main>
   );
 }
