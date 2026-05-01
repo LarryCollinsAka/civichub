@@ -25,7 +25,7 @@ export default function MapPage() {
 
         map = new mapboxgl.Map({
           container: mapContainer.current!,
-          style: "mapbox://styles/mapbox/light-v11",
+          style: "mapbox://styles/mapbox/streets-v12",
           center: [11.5021, 3.848], // Yaoundé
           zoom: 13,
           pitch: 55,
